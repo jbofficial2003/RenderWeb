@@ -7,13 +7,22 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Azure Windows App Service: when WEBSITE_RUN_FROM_PACKAGE=1, wwwroot is read-only.
+// Use HOME\data as a writable root for user content (models, thumbs).
+const isRunFromPackage = process.env.WEBSITE_RUN_FROM_PACKAGE === '1' || process.env.WEBSITE_RUN_FROM_PACKAGE === 'https://';
+const homeDir = process.env.HOME || process.env.HOMEDRIVE && process.env.HOMEPATH ? path.join(process.env.HOMEDRIVE, process.env.HOMEPATH) : __dirname;
+const writableRoot = isRunFromPackage ? path.join(homeDir, 'data') : __dirname;
+const modelsDir = path.join(writableRoot, 'models');
+const thumbsDir = path.join(writableRoot, 'thumbs');
+
 app.use(cors());
 app.use(express.static('public'));
-app.use('/models', express.static('models'));
+app.use('/models', express.static(modelsDir));
+app.use('/thumbs', express.static(thumbsDir));
 // Thumbnails disabled; only serve models and public assets
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'models/'),
+  destination: (req, file, cb) => cb(null, modelsDir + path.sep),
   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 const upload = multer({ storage });
@@ -25,7 +34,7 @@ app.post('/upload', upload.single('model'), (req, res) => {
 
 // List all models (simple filenames)
 app.get('/models-list', (req, res) => {
-  fs.readdir('models', (err, files) => {
+  fs.readdir(modelsDir, (err, files) => {
     if (err) return res.json([]);
     res.json(files.filter(f => f.endsWith('.glb')));
   });
@@ -34,7 +43,7 @@ app.get('/models-list', (req, res) => {
 // Get models with metadata
 app.get('/models-metadata', async (req, res) => {
   try {
-    const files = await fs.promises.readdir('models');
+    const files = await fs.promises.readdir(modelsDir);
     const glbFiles = files.filter(f => f.endsWith('.glb'));
 
     const models = [];
@@ -65,9 +74,8 @@ app.get('/generate-thumb/:filename', async (req, res) => {
   try {
     const { filename } = req.params;
     const displayName = filename.replace(/^\d+-/, '').replace('.glb', '');
-    const thumbDir = path.join('public', 'thumbs');
-    if (!fs.existsSync(thumbDir)) fs.mkdirSync(thumbDir, { recursive: true });
-    const outPath = path.join(thumbDir, `${displayName}.png`);
+    if (!fs.existsSync(thumbsDir)) fs.mkdirSync(thumbsDir, { recursive: true });
+    const outPath = path.join(thumbsDir, `${displayName}.png`);
     if (fs.existsSync(outPath)) return res.json({ ok: true, url: `/thumbs/${displayName}.png` });
 
     const puppeteer = require('puppeteer');
@@ -96,14 +104,15 @@ app.get('/generate-thumb/:filename', async (req, res) => {
 // Remove a model
 app.delete('/remove/:filename', (req, res) => {
   const filename = req.params.filename;
-  fs.unlink(path.join('models', filename), () => res.sendStatus(200));
+  fs.unlink(path.join(modelsDir, filename), () => res.sendStatus(200));
 });
 
 
 
 
-// Ensure models directory exists
-if (!fs.existsSync('models')) fs.mkdirSync('models');
+// Ensure writable directories exist
+if (!fs.existsSync(modelsDir)) fs.mkdirSync(modelsDir, { recursive: true });
+if (!fs.existsSync(thumbsDir)) fs.mkdirSync(thumbsDir, { recursive: true });
 
 // Bind to all network interfaces (0.0.0.0) instead of just localhost
 app.listen(port, '0.0.0.0', () => {
