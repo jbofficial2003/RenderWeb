@@ -23,10 +23,11 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: npm install, build
+      - name: npm install, build, and test
         run: |
           npm install
-          node server.js
+          npm run build --if-present
+          npm run test --if-present
       
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -50,9 +51,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_09DEC9AD4CEC4830B55BF9B3EB6EAC9C }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_784E88A1CA164D6E9320BBA8E335345C }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C0BEEAF45B5242088DDE08C2A501800A }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_26813F63910D4C30A838F285AB756E25 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DFF4138255E446F5BBD18BBA11D49FBC }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_059EFEC8E9E24C56BDE1C1731935F741 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -61,5 +62,4 @@ jobs:
           app-name: 'arcloud'
           slot-name: 'Production'
           package: .
-
           
