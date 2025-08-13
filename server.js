@@ -5,7 +5,7 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.static('public'));
@@ -99,72 +99,14 @@ app.delete('/remove/:filename', (req, res) => {
   fs.unlink(path.join('models', filename), () => res.sendStatus(200));
 });
 
-// Helper function to categorize models
-function getCategoryFromName(name) {
-  const lowerName = name.toLowerCase();
-  
-  if (['cube', 'sphere', 'cylinder', 'square'].includes(lowerName)) {
-    return 'Geometric';
-  } else if (['alphabet'].includes(lowerName)) {
-    return 'Educational';
-  } else if (['cat', 'dog', 'elephant', 'fox', 'goat', 'hen', 'lion', 'monkey', 'owl', 'parrot', 'quail', 'rat', 'zebra'].includes(lowerName)) {
-    return 'Animals';
-  } else if (['apple', 'ball', 'icecream', 'jug', 'kite', 'nest', 'ship', 'telephone', 'umbrella', 'van', 'watch', 'xylophone', 'yacht'].includes(lowerName)) {
-    return 'Objects';
-  } else if (['damaged_helmet'].includes(lowerName)) {
-    return 'Equipment';
-  } else {
-    return 'General';
-  }
-}
 
-// Helper function to get descriptions
-function getDescriptionFromName(name) {
-  const lowerName = name.toLowerCase();
-  
-  const descriptions = {
-    'cube': 'A three-dimensional solid object bounded by six square faces, facets or sides, with three meeting at each vertex.',
-    'cylinder': 'A three-dimensional solid that holds two parallel bases joined by a curved surface, at a fixed distance.',
-    'sphere': 'A perfectly round three-dimensional object where every point on the surface is equidistant from the center.',
-    'square': 'A two-dimensional shape with four equal sides and four right angles.',
-    'alphabet': 'Educational model for learning the alphabet.',
-    'apple': 'A round fruit with red, yellow, or green skin and white flesh.',
-    'ball': 'A spherical object used in various sports and games.',
-    'cat': 'A small domesticated carnivorous mammal with soft fur.',
-    'dog': 'A domesticated carnivorous mammal, typically kept as a pet.',
-    'elephant': 'A large gray mammal with a long trunk and tusks.',
-    'fox': 'A small wild canine with a bushy tail and pointed ears.',
-    'goat': 'A domesticated ruminant mammal with backward-curving horns.',
-    'hen': 'A female chicken, especially one kept for egg production.',
-    'icecream': 'A sweet frozen food made from dairy products.',
-    'jug': 'A container for holding liquids, typically with a handle and spout.',
-    'kite': 'A light frame covered with paper or cloth, flown in the wind.',
-    'lion': 'A large wild cat with a tawny coat and a flowing mane.',
-    'monkey': 'A small to medium-sized primate with a long tail.',
-    'nest': 'A structure built by birds to hold their eggs and young.',
-    'owl': 'A nocturnal bird of prey with large eyes and a hooked beak.',
-    'parrot': 'A colorful tropical bird with a curved beak and the ability to mimic speech.',
-    'quail': 'A small ground-dwelling bird with a plump body.',
-    'rat': 'A rodent with a long tail and pointed snout.',
-    'ship': 'A large vessel for transporting passengers or cargo by sea.',
-    'telephone': 'A device for transmitting sound over long distances.',
-    'umbrella': 'A device used for protection against rain or sun.',
-    'van': 'A motor vehicle used for transporting goods or people.',
-    'watch': 'A small timepiece worn on the wrist.',
-    'xylophone': 'A musical instrument with wooden bars struck by mallets.',
-    'yacht': 'A medium-sized sailing vessel used for recreation.',
-    'zebra': 'A wild horse with black and white stripes.',
-    'damaged_helmet': 'A protective headgear that has been damaged or worn.'
-  };
-  
-  return descriptions[lowerName] || 'A 3D model for AR viewing and interaction.';
-}
+
 
 // Ensure models directory exists
 if (!fs.existsSync('models')) fs.mkdirSync('models');
 
 // Bind to all network interfaces (0.0.0.0) instead of just localhost
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running at http://localhost:${port}`);
-  console.log(`Server also accessible at http://172.16.134.226:${port}`);
+  console.log(`✅ Server running on port ${port}`);
 });
+
